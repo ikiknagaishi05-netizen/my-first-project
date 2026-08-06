@@ -10,8 +10,8 @@ from attendance_import.ocr import extract_text_from_pdf
 from attendance_import.parser import parse_pages
 
 pytestmark = pytest.mark.skipif(
-    shutil.which("tesseract") is None or shutil.which("pdftoppm") is None,
-    reason="tesseract/poppler が未インストールの環境ではスキップ",
+    shutil.which("tesseract") is None,
+    reason="tesseractが未インストールの環境ではスキップ",
 )
 
 

@@ -13,21 +13,23 @@
 
 from __future__ import annotations
 
-import io
 import json
-import subprocess
 import tempfile
 from pathlib import Path
 
+import fitz  # PyMuPDF
 import streamlit as st
 
 from attendance_import.aggregate import summarize_sheet
+from attendance_import.ocr_setup import configure_tesseract
 from attendance_import.reconcile import compare_employees, compare_roster, resolve_name
 from attendance_import.report import annotate_workbook, write_reconcile_report
 from attendance_import.roster import load_workbook_sheets
 from attendance_import.timesheet_ocr import extract_page
 
 FACILITIES_FILE = Path(__file__).parent / "facilities.json"
+
+tesseract_error = configure_tesseract()
 
 st.set_page_config(page_title="出勤簿・勤務形態一覧表 作成支援", layout="wide")
 
@@ -43,13 +45,17 @@ def save_facilities(data: dict) -> None:
 
 
 def rasterize_pdf(pdf_bytes: bytes, out_dir: Path, dpi: int = 300) -> list[Path]:
-    pdf_path = out_dir / "input.pdf"
-    pdf_path.write_bytes(pdf_bytes)
-    subprocess.run(
-        ["pdftoppm", "-png", "-r", str(dpi), str(pdf_path), str(out_dir / "page")],
-        check=True,
-    )
-    return sorted(out_dir.glob("page-*.png"))
+    """PDFの各ページをPNG化する。Popplerのインストールが不要なPyMuPDFを使用。"""
+    zoom = dpi / 72
+    matrix = fitz.Matrix(zoom, zoom)
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    paths = []
+    for i, page in enumerate(doc, start=1):
+        pix = page.get_pixmap(matrix=matrix)
+        path = out_dir / f"page-{i:02d}.png"
+        pix.save(str(path))
+        paths.append(path)
+    return paths
 
 
 def guess_page_name(image_path: Path) -> str:
@@ -70,6 +76,14 @@ def guess_page_name(image_path: Path) -> str:
 
 st.title("出勤簿・勤務形態一覧表 作成支援")
 st.caption("毎月の複数事業所分の出勤簿確認と勤務形態一覧表への集計をまとめて行います。")
+
+if tesseract_error:
+    st.error(
+        "文字認識ソフト(Tesseract OCR)が見つかりません。\n\n"
+        + tesseract_error
+        + "\n\nインストール後、このアプリを再起動(ウィンドウを閉じてstart.batを再実行)してください。\n"
+        "※Excelへの集計だけならOCRは不要なので、PDFをアップロードしなければこのまま使えます。"
+    )
 
 facilities = load_facilities()
 

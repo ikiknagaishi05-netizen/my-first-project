@@ -4,3 +4,4 @@ __pycache__/
 samples/sample_result.xlsx
 facilities.json
 .streamlit/
+venv/

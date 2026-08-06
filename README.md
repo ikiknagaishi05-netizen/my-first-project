@@ -5,12 +5,37 @@
 毎月、複数事業所の「出勤簿兼申請書」PDFと「勤務形態一覧表」Excelを扱う場合は、
 ブラウザで動く `app.py` を使うと簡単です。
 
-```bash
-# 初回のみ
-pip3 install -r requirements.txt
-sudo apt-get install -y tesseract-ocr tesseract-ocr-jpn poppler-utils
+### Windowsではじめる方（初めての方向け）
 
-# 起動
+1. **Pythonをインストール**
+   https://www.python.org/downloads/ を開き、「Download Python」ボタンでインストーラをダウンロードして実行します。
+   インストール画面の一番下にある **「Add python.exe to PATH」に必ずチェックを入れてから** 「Install Now」を押してください。
+
+2. **文字認識ソフト(Tesseract OCR)をインストール**
+   https://github.com/UB-Mannheim/tesseract/wiki を開き、`tesseract-ocr-w64-setup-*.exe` をダウンロードして実行します。
+   インストール中の「Additional language data」の画面で **Japanese にチェックを入れて** ください。
+   (これを忘れると日本語が読み取れません)
+   インストール先は変更せず、既定のまま進めてください。
+
+3. **このアプリ一式をダウンロード**
+   GitHubのページ右上の緑色の「Code」ボタン→「Download ZIP」でダウンロードし、
+   好きな場所(デスクトップなど)に展開(右クリック→すべて展開)してください。
+
+4. **`start.bat` をダブルクリック**
+   展開したフォルダの中にある `start.bat` をダブルクリックすると、初回は自動で準備が始まります
+   (数分かかります)。準備が終わると自動でブラウザが開き、アプリが使えるようになります。
+   2回目以降は `start.bat` をダブルクリックするだけで起動します。
+
+うまく起動しない場合は、`start.bat` を実行した際に表示される黒い画面(コマンドプロンプト)の
+メッセージを教えていただければ原因を確認します。
+
+### Mac/Linux、またはコマンド操作に慣れている方
+
+```bash
+pip3 install -r requirements.txt
+# 文字認識ソフト(Mac): brew install tesseract tesseract-lang
+# 文字認識ソフト(Ubuntu/Debian): sudo apt-get install -y tesseract-ocr tesseract-ocr-jpn
+
 streamlit run app.py
 ```
 
@@ -74,7 +99,7 @@ Excelへの集計だけであれば `--pdf` を省略でき、その場合はOCR
 
 ```bash
 # システム依存パッケージ (Ubuntu/Debian)
-sudo apt-get install -y tesseract-ocr tesseract-ocr-jpn poppler-utils
+sudo apt-get install -y tesseract-ocr tesseract-ocr-jpn
 
 # Pythonパッケージ
 pip3 install -r requirements.txt

@@ -2,14 +2,23 @@
 
 from __future__ import annotations
 
-from PIL import Image, ImageOps
-import pdf2image
+import io
+
+import fitz  # PyMuPDF
 import pytesseract
+from PIL import Image, ImageOps
 
 
 def pdf_to_images(pdf_path: str, dpi: int = 300) -> list[Image.Image]:
-    """PDFの各ページをPIL Imageに変換する。"""
-    return pdf2image.convert_from_path(pdf_path, dpi=dpi)
+    """PDFの各ページをPIL Imageに変換する。Popplerのインストールが不要なPyMuPDFを使用。"""
+    zoom = dpi / 72
+    matrix = fitz.Matrix(zoom, zoom)
+    images = []
+    with fitz.open(pdf_path) as doc:
+        for page in doc:
+            pix = page.get_pixmap(matrix=matrix)
+            images.append(Image.open(io.BytesIO(pix.tobytes("png"))))
+    return images
 
 
 def preprocess(image: Image.Image) -> Image.Image:

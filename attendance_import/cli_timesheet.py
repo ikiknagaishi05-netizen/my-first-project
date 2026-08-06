@@ -39,18 +39,27 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def _rasterize(pdf_path: str, out_dir: str, dpi: int, page_range: str | None) -> list[str]:
-    """pdftoppmでPDFをPNG化する。"""
-    import subprocess
+    """PDFをPNG化する。Popplerのインストールが不要なPyMuPDFを使用。"""
+    import fitz  # PyMuPDF
 
-    cmd = ["pdftoppm", "-png", "-r", str(dpi)]
     if page_range:
         first, _, last = page_range.partition("-")
-        cmd += ["-f", first, "-l", last or first]
-    cmd += [pdf_path, os.path.join(out_dir, "page")]
-    subprocess.run(cmd, check=True)
-    return sorted(
-        os.path.join(out_dir, f) for f in os.listdir(out_dir) if f.startswith("page") and f.endswith(".png")
-    )
+        first_page, last_page = int(first), int(last or first)
+    else:
+        first_page, last_page = None, None
+
+    zoom = dpi / 72
+    matrix = fitz.Matrix(zoom, zoom)
+    paths = []
+    with fitz.open(pdf_path) as doc:
+        for i, page in enumerate(doc, start=1):
+            if first_page and not (first_page <= i <= last_page):
+                continue
+            pix = page.get_pixmap(matrix=matrix)
+            path = os.path.join(out_dir, f"page-{i:02d}.png")
+            pix.save(path)
+            paths.append(path)
+    return sorted(paths)
 
 
 def run(argv: list[str] | None = None) -> int:
